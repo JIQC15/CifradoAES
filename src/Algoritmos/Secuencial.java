@@ -10,39 +10,34 @@ import java.util.List;
 
 public class Secuencial {
 
-    public static void main(String[] args) {
-        try {
+//    public static void main(String[] args) {
+//        try {
 //            String key = "ClaveSecreta1234"; // Clave de 128 bits
-            String key = "ClaveSecreta1234ClaveSecreta1234"; //Clave 196 bites
-//            String key = "ClaveSecreta1234ClaveSecreta1234ClaveSecreta1234"; //Clave 256 bites
-            SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(), "AES");
-            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-
-            List<String> words = cargarPalabrasDesdeArchivo("src/ArchivosTXT/SPIDER-MAN.txt");
-
-            List<byte[]> ciphertexts = new ArrayList<>();
-            List<String> decryptedTexts = new ArrayList<>(); // Lista para almacenar los textos descifrados
-
-            long tiempoInicio = System.currentTimeMillis(); // Capturar el tiempo de inicio
-
-            cifrarYDescifrarTextos(words, cipher, secretKey, ciphertexts, decryptedTexts);
-
-            long tiempoFin = System.currentTimeMillis(); // Capturar el tiempo de finalización
-            long tiempoTotal = tiempoFin - tiempoInicio;
-            System.out.println("Tiempo total de ejecucion: " + tiempoTotal + " milisegundos");
-            System.out.println("Total de palabras en el texto: " + words.size());
-
-            // Puedes almacenar los textos cifrados y descifrados en arreglos o listas según tus necesidades
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static int contarPalabrasEnTexto(String texto) {
-        String[] palabras = texto.split("\\s+"); // Divide el texto en palabras usando espacios en blanco como delimitadores
-        return palabras.length;
-    }
-
+//            SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(), "AES");
+//            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+//
+//            List<String> words = cargarPalabrasDesdeArchivo("src/ArchivosTXT/SPIDER-MAN.txt");
+//
+//            int iteraciones = 1; // Número de iteraciones deseado
+//
+//            long tiempoInicio = System.currentTimeMillis(); // Capturar el tiempo de inicio
+//
+//            List<byte[]> ciphertexts = cifrarTextos(words, cipher, secretKey, iteraciones);
+////            List<String> decryptedTexts = descifrarTextos(ciphertexts, cipher, secretKey, iteraciones);
+//
+//            long tiempoFin = System.currentTimeMillis(); // Capturar el tiempo de finalización
+//            long tiempoTotal = tiempoFin - tiempoInicio;
+//            
+//            System.out.println("\nCIFRADO SECUENCIAL...");
+//            System.out.println("Tiempo total de ejecucion: " + tiempoTotal + " milisegundos");
+//            System.out.println("Total de palabras en el texto: " + words.size());
+//
+//            // Puedes almacenar los textos cifrados y descifrados en arreglos o listas según tus necesidades
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+    
     public static List<String> cargarPalabrasDesdeArchivo(String rutaArchivo) {
         List<String> palabras = new ArrayList<>();
         try {
@@ -59,40 +54,68 @@ public class Secuencial {
         }
         return palabras;
     }
-
-    public static void cifrarYDescifrarTextos(List<String> words, Cipher cipher, SecretKeySpec secretKey,
-                                              List<byte[]> ciphertexts, List<String> decryptedTexts) {
+    
+    public static List<byte[]> cifrarTextos(List<String> words, Cipher cipher, SecretKeySpec secretKey, int iteraciones) {
+        List<byte[]> ciphertexts = new ArrayList<>();
         int palabrasCifradas = 0;
-        int saltoLineaCada = 1000; // Cambiar a 1000 para hacer un salto de línea cada 1000 palabras
 
         for (String word : words) {
-            byte[] ciphertext = cifrarTexto(word, cipher, secretKey);
+            byte[] ciphertext = cifrarTextoConIteraciones(word, cipher, secretKey, iteraciones);
             ciphertexts.add(ciphertext);
 
             // Mostrar el resultado en formato hexadecimal
             mostrarTextoCifradoEnHexadecimal(ciphertext);
-
-            // Descifrar el texto y agregarlo a la lista de textos descifrados
-//            String decryptedText = descifrarTexto(ciphertext, cipher, secretKey);
-//            decryptedTexts.add(decryptedText);
-
-            // Mostrar el texto descifrado
-//            mostrarTextoDescifrado(decryptedText);
-
             palabrasCifradas++;
-
-            // Hacer un salto de línea si hemos cifrado un múltiplo de "saltoLineaCada" palabras
-            if (palabrasCifradas % saltoLineaCada == 0) {
-                System.out.println();
-            }
         }
+        System.out.println("Palabras cifradas: " + palabrasCifradas);
+        return ciphertexts;
     }
 
-    public static byte[] cifrarTexto(String texto, Cipher cipher, SecretKeySpec secretKey) {
+    public static List<String> descifrarTextos(List<byte[]> ciphertexts, Cipher cipher, SecretKeySpec secretKey, int iteraciones) {
+        List<String> decryptedTexts = new ArrayList<>();
+        int palabrasDescifradas = 0;
+
+        for (byte[] ciphertext : ciphertexts) {
+            // Descifrar el texto y agregarlo a la lista de textos descifrados
+            String decryptedText = descifrarTextoConIteraciones(ciphertext, cipher, secretKey, iteraciones);
+            decryptedTexts.add(decryptedText);
+
+            // Mostrar el texto descifrado
+            mostrarTextoDescifrado(decryptedText);
+            palabrasDescifradas++;
+        }
+        System.out.println("Palabras Descifradas: " + palabrasDescifradas);
+        return decryptedTexts;
+    }
+
+    public static byte[] cifrarTextoConIteraciones(String texto, Cipher cipher, SecretKeySpec secretKey, int iteraciones) {
         try {
             byte[] plaintextBytes = texto.getBytes();
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-            return cipher.doFinal(plaintextBytes);
+
+            // Aplicar iteraciones
+            for (int i = 0; i < iteraciones; i++) {
+                plaintextBytes = cipher.doFinal(plaintextBytes);
+            }
+
+            return plaintextBytes;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static String descifrarTextoConIteraciones(byte[] ciphertext, Cipher cipher, SecretKeySpec secretKey, int iteraciones) {
+        try {
+            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+            byte[] decryptedBytes = ciphertext;
+
+            // Aplicar iteraciones inversas (descifrado)
+            for (int i = 0; i < iteraciones; i++) {
+                decryptedBytes = cipher.doFinal(decryptedBytes);
+            }
+
+            return new String(decryptedBytes);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -105,17 +128,6 @@ public class Secuencial {
             System.out.print(String.format("%02X", b));
         }
         System.out.println();
-    }
-
-    public static String descifrarTexto(byte[] ciphertext, Cipher cipher, SecretKeySpec secretKey) {
-        try {
-            cipher.init(Cipher.DECRYPT_MODE, secretKey);
-            byte[] decryptedBytes = cipher.doFinal(ciphertext);
-            return new String(decryptedBytes);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 
     public static void mostrarTextoDescifrado(String decryptedText) {

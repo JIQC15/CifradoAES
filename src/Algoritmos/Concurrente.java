@@ -5,9 +5,11 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -18,30 +20,29 @@ public class Concurrente {
             String key = "ClaveSecreta1234"; // Clave de 128 bits
             SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(), "AES");
 
-            List<String> words = cargarPalabrasDesdeArchivo("src/ArchivosTXT/SPIDER-MAN.txt"); 
+            List<String> words = cargarPalabrasDesdeArchivo("src/ArchivosTXT/SPIDER-MAN.txt");
 
-            List<byte[]> ciphertexts = new ArrayList<>();
+            int iteraciones = 1;
+            // Iniciar el cronómetro
+            long startTime = System.currentTimeMillis();
 
-            int numThreads = Runtime.getRuntime().availableProcessors(); // Obtener el n�mero de n�cleos del procesador
-            ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+            // Cifrar el texto con el número de iteraciones deseado
+            List<byte[]> ciphertexts = cifrarTextosConcurrente(words, secretKey, iteraciones);
 
-            long startTime = System.nanoTime(); // Iniciar el cronometro
+            // Detener el cronómetro
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
 
-            for (String word : words) {
-                executor.execute(() -> cifrarYMostrarTextoEnHexadecimal(word, secretKey, ciphertexts));
-
-                // Mostrar la cantidad de hilos activos
-                int activeThreads = ((ThreadPoolExecutor) executor).getActiveCount();
-                System.out.println("Cantidad de hilos activos: " + activeThreads);
+            // Mostrar los textos cifrados en formato hexadecimal
+            for (byte[] ciphertext : ciphertexts) {
+                System.out.println("Texto cifrado en hexadecimal: " + bytesToHex(ciphertext));
             }
 
-            executor.shutdown();
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            // Mostrar el tiempo de ejecución
+            System.out.println("\nCIFRADO CONCURRENTE...");
+            System.out.println("Tiempo de ejecución: " + duration + " milisegundos");
+            System.out.println("Total de palabras en el texto: " + words.size());
 
-            long endTime = System.nanoTime(); // Detener el cron�metro
-            long duration = (endTime - startTime) / 1000000; // Calcular la duraci�n en milisegundos
-
-            System.out.println("Tiempo total (ms): " + duration);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -53,7 +54,9 @@ public class Concurrente {
             BufferedReader br = new BufferedReader(new FileReader(rutaArchivo));
             String linea;
             while ((linea = br.readLine()) != null) {
-                palabras.add(linea);
+                // Dividir la línea en palabras utilizando espacios en blanco como separadores
+                String[] palabrasEnLinea = linea.split("\\s+");
+                palabras.addAll(Arrays.asList(palabrasEnLinea));
             }
             br.close();
         } catch (Exception e) {
@@ -62,20 +65,89 @@ public class Concurrente {
         return palabras;
     }
 
-    public static void cifrarYMostrarTextoEnHexadecimal(String word, SecretKeySpec secretKey, List<byte[]> ciphertexts) {
+    public static List<byte[]> cifrarTextosConcurrente(List<String> words, SecretKeySpec secretKey, int iteraciones) throws InterruptedException {
+        int numThreads = Runtime.getRuntime().availableProcessors();//Agarra la cantidad de subprocesadores que tengo en la computadora
+        ExecutorService executor = Executors.newFixedThreadPool(numThreads);//ThreadPool
+
+        List<Future<byte[]>> futures = new ArrayList<>();
+
+        for (String word : words) {
+            futures.add(executor.submit(() -> cifrarTextoConIteracionesConcurrente(word, secretKey, iteraciones)));//Usamos lambdas
+        }
+
+        List<byte[]> ciphertexts = new ArrayList<>();
+
+        for (Future<byte[]> future : futures) {
+            try {
+                byte[] result = future.get();
+                ciphertexts.add(result);
+                System.out.println("Texto cifrado en hexadecimal: " + bytesToHex(result));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        executor.shutdown();//Apaga a los hilos cuando terminan completamente su tarea
+        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+
+        return ciphertexts;
+    }
+
+    public static List<String> descifrarTextosConcurrente(List<byte[]> ciphertexts, SecretKeySpec secretKey) throws InterruptedException {
+        int numThreads = Runtime.getRuntime().availableProcessors();
+        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+
+        List<Future<String>> futures = new ArrayList<>();
+
+        for (byte[] ciphertext : ciphertexts) {
+            futures.add(executor.submit(() -> descifrarTextoConIteracionesConcurrente(ciphertext, secretKey)));
+        }
+
+        List<String> decryptedTexts = new ArrayList<>();
+
+        for (Future<String> future : futures) {
+            try {
+                String result = future.get();
+                decryptedTexts.add(result);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        executor.shutdown();
+        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+
+        return decryptedTexts;
+    }
+
+    public static byte[] cifrarTextoConIteracionesConcurrente(String texto, SecretKeySpec secretKey, int iteraciones) {
         try {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
 
-            byte[] plaintextBytes = word.getBytes();
-            byte[] ciphertext = cipher.doFinal(plaintextBytes);
+            byte[] plaintextBytes = texto.getBytes();
 
-            synchronized (ciphertexts) {
-                ciphertexts.add(ciphertext);
-                System.out.println("Texto cifrado en hexadecimal: " + bytesToHex(ciphertext));
+            for (int i = 0; i < iteraciones; i++) {
+                plaintextBytes = cipher.doFinal(plaintextBytes); // Cifrar con resultado intermedio
             }
+
+            return plaintextBytes; // Devuelve el resultado intermedio después de las iteraciones
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static String descifrarTextoConIteracionesConcurrente(byte[] ciphertext, SecretKeySpec secretKey) {
+        try {
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+            byte[] decryptedBytes = cipher.doFinal(ciphertext);
+
+            return new String(decryptedBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
@@ -87,6 +159,3 @@ public class Concurrente {
         return result.toString();
     }
 }
-
-
-
