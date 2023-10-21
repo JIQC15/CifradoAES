@@ -11,6 +11,8 @@ import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,6 +25,7 @@ public class Interfaz extends javax.swing.JFrame {
     private String rutaArchivoSeleccionado;
     private List<String> contenidoArchivo;
     private Cipher cipher;
+    private static int Hilos = 0;
 
     FondoPanel fondoUI = new FondoPanel();
 
@@ -34,6 +37,7 @@ public class Interfaz extends javax.swing.JFrame {
 
         this.lblOcultar.setVisible(false);
         this.txtTiempo.setEditable(false);
+        this.lblHilos.setEditable(false);
         this.lblEstado.setHorizontalAlignment(SwingConstants.CENTER);
 
         bngMetodo.add(rbConcurrente);
@@ -72,6 +76,8 @@ public class Interfaz extends javax.swing.JFrame {
         cmboxIteraciones = new javax.swing.JComboBox<>();
         lblEstado = new javax.swing.JLabel();
         jLabel8 = new javax.swing.JLabel();
+        lblHilos = new javax.swing.JTextField();
+        jLabel9 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -205,6 +211,14 @@ public class Interfaz extends javax.swing.JFrame {
         jLabel8.setText("Iteraciones");
         jLabel8.setOpaque(true);
 
+        lblHilos.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+
+        jLabel9.setBackground(new java.awt.Color(0, 0, 0));
+        jLabel9.setFont(new java.awt.Font("Segoe UI", 2, 18)); // NOI18N
+        jLabel9.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel9.setText("Hilos Totales");
+        jLabel9.setOpaque(true);
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -230,13 +244,21 @@ public class Interfaz extends javax.swing.JFrame {
                         .addComponent(lblArchivo, javax.swing.GroupLayout.PREFERRED_SIZE, 224, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGap(27, 27, 27)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 603, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addGap(8, 8, 8)
-                                .addComponent(txtTiempo, javax.swing.GroupLayout.PREFERRED_SIZE, 184, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 117, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel2Layout.createSequentialGroup()
+                                        .addGap(41, 41, 41)
+                                        .addComponent(jLabel6)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel2Layout.createSequentialGroup()
+                                        .addGap(8, 8, 8)
+                                        .addComponent(txtTiempo, javax.swing.GroupLayout.PREFERRED_SIZE, 184, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(lblHilos, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addGap(67, 67, 67))))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGap(317, 317, 317)
                         .addComponent(jLabel3))
@@ -297,7 +319,7 @@ public class Interfaz extends javax.swing.JFrame {
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addComponent(lblOcultar, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(lblVer, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 10, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -315,11 +337,15 @@ public class Interfaz extends javax.swing.JFrame {
                     .addComponent(btnCifrar))
                 .addGap(17, 17, 17)
                 .addComponent(lblEstado, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel6)
+                    .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 13, Short.MAX_VALUE)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtTiempo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel6))
-                .addGap(74, 74, 74))
+                    .addComponent(lblHilos, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(79, 79, 79))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -361,7 +387,7 @@ public class Interfaz extends javax.swing.JFrame {
                 lblEstado.setText("Cifrado Finalizado!");
 
                 // Guardar los textos cifrados en un archivo
-                String rutaArchivoCifrado = "archivo_cifrado_Secuencial.key"; // Cambia la ruta según tus necesidades
+                String rutaArchivoCifrado = "archivo_cifrado_Secuencial.txt"; // Cambia la ruta según tus necesidades
                 guardarArchivoCifrado(ciphertexts, rutaArchivoCifrado);
                 System.out.println("Archivo Guardado Con Exito!");
                 // Mostrar resultados en la interfaz o realizar otras acciones necesarias
@@ -369,6 +395,7 @@ public class Interfaz extends javax.swing.JFrame {
                 lblEstado.setText("No se ha seleccionado un archivo.");
             }
         } else if (rbConcurrente.isSelected()) {
+
             lblEstado.setText("Cifrando el contenido del archivo...");
 
             if (contenidoArchivo != null) {
@@ -380,15 +407,18 @@ public class Interfaz extends javax.swing.JFrame {
 
                 // Llamar al método de cifrado de la clase Concurrente
                 List<byte[]> ciphertexts = null;
-                
+
                 try {
                     ciphertexts = Concurrente.cifrarTextosConcurrente(contenidoArchivo, new SecretKeySpec(clave.getBytes(), "AES"), iteraciones);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Interfaz.class.getName()).log(Level.SEVERE, null, ex);
                 }
-               
+
                 long tiempoFin = System.currentTimeMillis(); // Capturar el tiempo de finalización
                 long tiempoTotal = tiempoFin - tiempoInicio;
+
+                Hilos = Concurrente.getNumeroHilos();
+                lblHilos.setText(" " + Hilos); // Actualiza el lblHilos
 
                 txtTiempo.setText(tiempoTotal + " Milisegundos");
                 lblEstado.setText("Cifrado Finalizado!");
@@ -398,7 +428,7 @@ public class Interfaz extends javax.swing.JFrame {
                 guardarArchivoCifrado(ciphertexts, rutaArchivoCifrado);
                 System.out.println("Archivo Guardado Con Éxito!");
                 // Mostrar resultados en la interfaz o realizar otras acciones necesarias
-            }else {
+            } else {
                 lblEstado.setText("No se ha seleccionado un archivo.");
             }
         } else {
@@ -408,14 +438,56 @@ public class Interfaz extends javax.swing.JFrame {
 
     private void btnDescifrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDescifrarActionPerformed
         // TODO add your handling code here:
-        if (rbConcurrente.isSelected()) {
+        if (rbSecuencial.isSelected()) {
+            lblEstado.setText("Descifrando el contenido del archivo...");
+
+            if (contenidoArchivo != null) {
+                String clave = new String(txt_Password.getPassword());
+
+                long tiempoInicio = System.currentTimeMillis(); //Capturar el tiempo
+
+                // Obtener el número de iteraciones seleccionado en el comboBox
+                int iteraciones = Integer.parseInt(cmboxIteraciones.getSelectedItem().toString());
+
+                // Aquí, cargamos el archivo cifrado directamente                
+                List<byte[]> ciphertexts = Secuencial.cargarCiphertextsDesdeArchivo(rutaArchivoSeleccionado);
+
+                List<String> decryptedTexts = Secuencial.descifrarTextos(ciphertexts, cipher, new SecretKeySpec(clave.getBytes(), "AES"), iteraciones);
+
+                long tiempoFin = System.currentTimeMillis(); // Capturar el tiempo de finalización
+                long tiempoTotal = tiempoFin - tiempoInicio;
+
+                txtTiempo.setText(tiempoTotal + " Milisegundos");
+                lblEstado.setText("Descifrado Finalizado!");
+
+                // Hacer algo con los textos descifrados, por ejemplo, mostrarlos en la interfaz o guardarlos en un archivo
+                for (String text : decryptedTexts) {
+                    System.out.println("Texto Descifrado: " + text);
+                }
+
+                String rutaArchivoDescifrado = "archivo_Descifrado_Secuencial.txt"; // Cambia la ruta según tus necesidades
+                guardarTextoClaroEnArchivo(decryptedTexts, rutaArchivoDescifrado);
+                System.out.println("Archivo Guardado Con Éxito!");
+
+            } else {
+                lblEstado.setText("No se ha seleccionado un archivo cifrado o la clave no es válida.");
+            }
+        } else if (rbConcurrente.isSelected()) {
             System.out.println("El metodo a cifrar sera Concurrente");
-        } else if (rbSecuencial.isSelected()) {
-            System.out.println("El metodo a cifrar sera Secuencial");
         } else {
             System.out.println("No selecciono nada");
         }
     }//GEN-LAST:event_btnDescifrarActionPerformed
+
+    public static void guardarTextoClaroEnArchivo(List<String> textos, String rutaArchivo) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(rutaArchivo))) {
+            for (String texto : textos) {
+                writer.println(texto);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     private void lblVerMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblVerMouseClicked
         // TODO add your handling code here:
@@ -534,9 +606,11 @@ public class Interfaz extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JLabel lblArchivo;
     private javax.swing.JLabel lblEstado;
+    private javax.swing.JTextField lblHilos;
     private javax.swing.JLabel lblOcultar;
     private javax.swing.JLabel lblVer;
     private javax.swing.JRadioButton rbConcurrente;

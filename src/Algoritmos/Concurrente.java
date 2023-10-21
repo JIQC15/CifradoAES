@@ -10,10 +10,11 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class Concurrente {
+    
+    private static int NumeroHilos = 0;
 
     public static void main(String[] args) {
         try {
@@ -36,6 +37,7 @@ public class Concurrente {
             // Mostrar los textos cifrados en formato hexadecimal
             for (byte[] ciphertext : ciphertexts) {
                 System.out.println("Texto cifrado en hexadecimal: " + bytesToHex(ciphertext));
+
             }
 
             // Mostrar el tiempo de ejecución
@@ -46,6 +48,10 @@ public class Concurrente {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    public static int getNumeroHilos(){
+        return NumeroHilos;
     }
 
     public static List<String> cargarPalabrasDesdeArchivo(String rutaArchivo) {
@@ -66,8 +72,11 @@ public class Concurrente {
     }
 
     public static List<byte[]> cifrarTextosConcurrente(List<String> words, SecretKeySpec secretKey, int iteraciones) throws InterruptedException {
+
         int numThreads = Runtime.getRuntime().availableProcessors();//Agarra la cantidad de subprocesadores que tengo en la computadora
+//        int numThreads = 32;
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);//ThreadPool
+        NumeroHilos = numThreads;
 
         List<Future<byte[]>> futures = new ArrayList<>();
 
@@ -86,6 +95,8 @@ public class Concurrente {
                 e.printStackTrace();
             }
         }
+
+        System.out.println("Numero de hilos: " + numThreads);
 
         executor.shutdown();//Apaga a los hilos cuando terminan completamente su tarea
         executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
